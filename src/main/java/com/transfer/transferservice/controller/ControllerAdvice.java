@@ -1,5 +1,6 @@
 package com.transfer.transferservice.controller;
 
+import com.transfer.transferservice.controller.dto.ErrorResponse;
 import com.transfer.transferservice.exceptions.AbstractException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -9,10 +10,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class ControllerAdvice {
 
     @ExceptionHandler(AbstractException.class)
-    public ResponseEntity<String> handleAbstractException(AbstractException exception) {
+    public ResponseEntity<ErrorResponse> handleAbstractException(AbstractException exception) {
         return ResponseEntity.status(exception.getStatus())
-                .body(exception.getMessage());
+                .body(new ErrorResponse(exception.getStatus().getReasonPhrase(), exception.getMessage()));
     }
-
 
 }

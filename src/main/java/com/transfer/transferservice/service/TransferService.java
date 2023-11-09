@@ -29,14 +29,15 @@ public class TransferService {
 
         Double amount = applyTaxes(transferRequest);
 
-        if(!validateTransferCanHappen(originAccount, amount)) throw new ValueNotAllowed("Insufficient funds");
+        validateTransferCanHappen(originAccount, amount);
 
         makeTransfer(accountAuthor, amount, transferRequest.destinationAccount());
         return saveTransfer(transferRequest, originAccount);
     }
 
-    protected boolean validateTransferCanHappen(Account originAccount, Double amount) {
-        return originAccount.getBalance() >= amount && amount > 0.0;
+    protected void validateTransferCanHappen(Account originAccount, Double amount) {
+        if(amount <= 0.0) throw new ValueNotAllowed("Amount can not be zero");
+        if(originAccount.getBalance() < amount) throw new ValueNotAllowed("Insufficient funds");
     }
 
     protected Double applyTaxes(TransferRequest transferRequest){
