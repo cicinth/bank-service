@@ -8,6 +8,8 @@ import com.transfer.transferservice.model.Account;
 import com.transfer.transferservice.model.Transfer;
 import com.transfer.transferservice.repository.TransferRepository;
 
+import com.transfer.transferservice.service.AccountService;
+import com.transfer.transferservice.service.TransferService;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -15,8 +17,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
@@ -37,6 +38,9 @@ public class TransferServiceTest {
 
     @Mock
     TransferRepository transferRepository;
+
+    @Captor
+    private ArgumentCaptor<Double> captor;
 
     @BeforeAll
     public void setup(){
@@ -63,6 +67,8 @@ public class TransferServiceTest {
     public void shouldReturnTrue_whenBalanceIsBiggerThenTransferValue(){
         Account account = new Account(123L, "Cinthia", 2323L, 500.0, LocalDateTime.now());
         transferService.validateTransferCanHappen(account, 100.0);
+
+        verifyNoInteractions(accountService);
     }
 
     @Test
@@ -110,13 +116,17 @@ public class TransferServiceTest {
         when(accountService.findByAccountNumber(1223L)).thenReturn(
                 new Account(1223L, "Cinthia", 2323L, 200.0, LocalDateTime.now())
         );
+
         Transfer transfer = transferService.transfer(1223L, transferRequest);
 
         Assertions.assertNotNull(transfer);
         Assertions.assertEquals(100.0,transfer.getAmount(), 0.1);
 
-        verify(accountService, times(1)).performWithdrawal(1223L, 101.99);
-        verify(accountService, times(0)).deposit(any(), any());
+
+        verify(accountService, times(1)).performWithdrawal(eq(1223L), captor.capture());
+
+        Assertions.assertEquals(101.99, captor.getValue(), 0.1);
+        verifyNoMoreInteractions(accountService);
     }
 
     @Test()

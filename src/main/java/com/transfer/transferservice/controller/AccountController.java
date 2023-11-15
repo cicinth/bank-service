@@ -4,6 +4,7 @@ package com.transfer.transferservice.controller;
 import com.transfer.transferservice.controller.dto.AccountDTO.AccountRequest;
 import com.transfer.transferservice.controller.dto.AccountDTO.AccountResponse;
 import com.transfer.transferservice.controller.dto.mapper.AccountMapper;
+import com.transfer.transferservice.model.Account;
 import com.transfer.transferservice.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,7 +26,7 @@ public class AccountController {
 
     @PostMapping
     public ResponseEntity<AccountResponse> saveAccount(@RequestBody AccountRequest accountRequest){
-        AccountResponse account = accountMapper.toResponse(accountService.saveAccount(accountRequest));
+         AccountResponse account = accountMapper.toResponse(accountService.saveAccount(accountRequest));
         return ResponseEntity.created(URI.create("/account/"+account.number())).body(account);
     }
 
