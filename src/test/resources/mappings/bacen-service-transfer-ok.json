@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/transfer",
+    "bodyPatterns": [
+      {
+        "contains": "3434"
+      }
+    ]
+  },
+  "response": {
+    "status": 200,
+    "body": "Transferencia realizada",
+    "headers": {
+      "Content-Type": "text/plain"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/transfer",
+    "bodyPatterns": [
+      {
+        "contains": "0"
+      }
+    ]
+  },
+  "response": {
+    "status": 404,
+    "body": "Banco nao encontrado",
+    "headers": {
+      "Content-Type": "text/plain"
+    }
+  }
+}

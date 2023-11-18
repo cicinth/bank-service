@@ -1,12 +1,18 @@
 package com.transfer.transferservice.service;
 
+import com.transfer.transferservice.client.BacenClient;
+import com.transfer.transferservice.client.model.TransferRequestBacen;
 import com.transfer.transferservice.controller.dto.TransferDTO.DestinationAccountRequest;
 import com.transfer.transferservice.controller.dto.TransferDTO.TransferRequest;
+import com.transfer.transferservice.exceptions.BankNotFound;
 import com.transfer.transferservice.exceptions.ValueNotAllowed;
 import com.transfer.transferservice.model.Account;
 import com.transfer.transferservice.model.Transfer;
 import com.transfer.transferservice.repository.TransferRepository;
+import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -20,6 +26,9 @@ public class TransferService {
 
     @Autowired
     AccountService accountService;
+
+    @Autowired
+    BacenClient bacenClient;
 
     private final Long bankCode = 123L;
 
@@ -47,11 +56,17 @@ public class TransferService {
 
     protected void makeTransfer(Long accountAuthor, Double amount, DestinationAccountRequest destinationAccount){
         accountService.performWithdrawal(accountAuthor, amount);
-
         if(Objects.equals(destinationAccount.bank(), bankCode)){
             accountService.deposit(destinationAccount.accountNumber(), amount);
+        } else {
+            try {
+                TransferRequestBacen transferRequest = new TransferRequestBacen(amount, destinationAccount.accountNumber(), destinationAccount.bank());
+                bacenClient.transfer(transferRequest);
+            } catch (FeignException e){
+                if(e.status()  == HttpStatus.NOT_FOUND.value()) throw new BankNotFound("Banco do destinatario não encontrado");
+                throw e;
+            }
         }
-        //TODO enviar para operadora
     }
 
     protected Transfer saveTransfer(TransferRequest transferRequest, Account originAccount){

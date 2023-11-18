@@ -1,5 +1,6 @@
 package com.transfer.transferservice.service;
 
+import com.transfer.transferservice.client.BacenClient;
 import com.transfer.transferservice.controller.dto.TransferDTO.DestinationAccountRequest;
 import com.transfer.transferservice.controller.dto.TransferDTO.TransferRequest;
 import com.transfer.transferservice.exceptions.NotFoundException;
@@ -39,28 +40,11 @@ public class TransferServiceTest {
     @Mock
     TransferRepository transferRepository;
 
+    @Mock
+    BacenClient bacenClient;
+
     @Captor
     private ArgumentCaptor<Double> captor;
-
-    @BeforeAll
-    public void setup(){
-        System.out.println("antes da classe - Antigo BeforeClass");
-    }
-
-    @AfterAll
-    public void after(){
-        System.out.println("depois da classe - Antigo AfterClass");
-    }
-
-    @BeforeEach
-    public void setupMethod(){
-        System.out.println("antes do metodo - Antigo Before");
-    }
-
-    @AfterEach
-    public void afterMethod(){
-        System.out.println("depois do metodo - Antigo After");
-    }
 
 
     @Test
@@ -167,6 +151,32 @@ public class TransferServiceTest {
        String actualMessage = exception.getMessage();
 
        Assertions.assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    public void shouldSendTransferForBacen_whenTransferIsBetweenAccountsInTheDifferentBank() {
+        TransferRequest transferRequest = new TransferRequest(100.00, new DestinationAccountRequest(
+                240L,
+                12345L
+        ));
+
+        when(accountService.findByAccountNumber(1223L)).thenReturn(
+                new Account(1223L, "Cinthia", 2323L, 200.0, LocalDateTime.now())
+        );
+
+        Transfer transfer = transferService.transfer(1223L, transferRequest);
+
+        Assertions.assertNotNull(transfer);
+        Assertions.assertEquals(100.0,transfer.getAmount(), 0.1);
+
+        verify(accountService, times(1)).performWithdrawal(eq(1223L), captor.capture());
+
+        Assertions.assertEquals(101.99, captor.getValue(), 0.1);
+
+        verify(bacenClient, times(1)).transfer(any());
+
+        verifyNoMoreInteractions(accountService);
+
     }
 
     private static Stream<Arguments> testParameters(){
